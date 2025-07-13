@@ -1,42 +1,37 @@
-from pydantic import BaseModel, EmailStr, Field
-from enum import Enum
+from pydantic import BaseModel, EmailStr
 from datetime import date
 from typing import Optional
+from enum import Enum
+
 
 class UserRole(str, Enum):
     usuario_fisico = "usuário físico"
     auditor = "auditor"
     cartorio = "cartório"
 
-class UserCreate(BaseModel):
-    id: str = Field(..., description="Identificador único do usuário")
-    nome_completo: str = Field(..., description="Nome completo do usuário")
+
+class UserIn(BaseModel):
+    nome_completo: str
+    id_documento: str
     email: EmailStr
     password: str
     role: UserRole
     data_nascimento: date
 
-class UserBase(BaseModel):
+
+class UserOut(BaseModel):
+    id: str
     nome_completo: str
     id_documento: str
-    email: str
-    role: str
-    data_nascimento: date
+    email: EmailStr
+    role: UserRole
+    data_nascimento: str  # opcionalmente `date`, mas geralmente convertemos para str ao sair
 
-class UserCreate(UserBase):
-    password: str
 
 class UserUpdate(BaseModel):
     nome_completo: Optional[str] = None
     id_documento: Optional[str] = None
-    email: Optional[str] = None
-    role: Optional[str] = None
+    email: Optional[EmailStr] = None
+    role: Optional[UserRole] = None
     data_nascimento: Optional[date] = None
     password: Optional[str] = None
-
-class UserOut(UserBase):
-    id: int
-    uuid: str
-
-    class Config:
-        orm_mode = True
