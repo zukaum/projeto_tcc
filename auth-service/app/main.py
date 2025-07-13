@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Body, HTTPException
 from typing import List
 from bson import ObjectId
-from . import users, schemas, db
+from datetime import date
+from . import db
+from .schemas import UserIn, UserOut, UserUpdate
 from .config import BASE_URL
-from app.db import db
 from .auth import hash_password, verify_password, create_token, decode_token
 from .email_utils import send_verification_email
 
@@ -72,7 +73,7 @@ async def read_users(skip: int = 0, limit: int = 100):
             id_documento=user["id_documento"],
             email=user["email"],
             role=user["role"],
-            data_nascimento=user["data_nascimento"]
+            data_nascimento=date.fromisoformat(user["data_nascimento"])
         ))
     return users_list
 
@@ -89,7 +90,7 @@ async def read_user(user_id: str):
         id_documento=user["id_documento"],
         email=user["email"],
         role=user["role"],
-        data_nascimento=user["data_nascimento"]
+        data_nascimento=date.fromisoformat(user["data_nascimento"])
     )
 
 
@@ -113,7 +114,7 @@ async def update_user(user_id: str, user_update: UserUpdate):
         id_documento=user["id_documento"],
         email=user["email"],
         role=user["role"],
-        data_nascimento=user["data_nascimento"]
+        data_nascimento=date.fromisoformat(user["data_nascimento"])
     )
 
 
