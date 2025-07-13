@@ -2,6 +2,10 @@ from fastapi import HTTPException
 from .schemas import UserCreate, UserRole
 from .auth import hash_password
 from app.db import db
+from sqlalchemy.orm import Session
+from . import models, schemas
+from uuid import uuid4
+from passlib.context import CryptContext
 import uuid
 import re
 
@@ -41,3 +45,36 @@ async def get_user_by_uuid(uuid: str):
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     return user
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def get_user(db: Session, user_id: int):
+    return db.query(models.User).filter(models.User.id == user_id).first()
+
+def get_users(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.User).offset(skip).limit(limit).all()
+
+def update_user(db: Session, user_id: int, user_update: schemas.UserUpdate):
+    db_user = get_user(db, user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    update_data = user_update.dict(exclude_unset=True)
+
+    if "password" in update_data:
+        update_data["hashed_password"] = pwd_context.hash(update_data.pop("password"))
+
+    for key, value in update_data.items():
+        setattr(db_user, key, value)
+
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+def delete_user(db: Session, user_id: int):
+    db_user = get_user(db, user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(db_user)
+    db.commit()
+    return {"detail": "User deleted"}

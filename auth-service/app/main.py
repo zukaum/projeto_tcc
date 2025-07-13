@@ -1,9 +1,15 @@
 from fastapi import FastAPI, Depends, Body
 from motor.motor_asyncio import AsyncIOMotorClient
+from typing import List
+from . import users, schemas, database
 from .config import MONGO_URI, DB_NAME, BASE_URL
 from .models import UserIn, UserOut
 from .auth import hash_password, verify_password, create_token, decode_token
 from .email_utils import send_verification_email
+from sqlalchemy.orm import Session
+
+
+
 
 app = FastAPI()
 client = AsyncIOMotorClient(MONGO_URI)
@@ -51,3 +57,22 @@ async def login(email: str = Body(...), password: str = Body(...)):
 
     token = create_token({"id": str(user["_id"]), "role": user["role"]})
     return {"token": token, "role": user["role"]}
+
+@router.get("/users", response_model=List[schemas.UserOut])
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
+    return users.get_users(db, skip=skip, limit=limit)
+
+@router.get("/users/{user_id}", response_model=schemas.UserOut)
+def read_user(user_id: int, db: Session = Depends(database.get_db)):
+    db_user = users.get_user(db, user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
+
+@router.put("/users/{user_id}", response_model=schemas.UserOut)
+def update_user(user_id: int, user: schemas.UserUpdate, db: Session = Depends(database.get_db)):
+    return users.update_user(db, user_id, user)
+
+@router.delete("/users/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(database.get_db)):
+    return users.delete_user(db, user_id)
