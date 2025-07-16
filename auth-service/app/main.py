@@ -2,7 +2,7 @@ from fastapi import FastAPI, Body, HTTPException
 from typing import List
 from bson import ObjectId
 from datetime import date
-from .db import db
+from .database import db
 from .schemas import UserIn, UserOut, UserUpdate
 from .config import BASE_URL
 from .auth import hash_password, verify_password, create_token, decode_token
@@ -25,7 +25,7 @@ async def register(user: UserIn):
         "id_documento": user.id_documento,
         "email": user.email,
         "password": hashed,
-        "role": user.role,
+        "role": user.role.value,
         "data_nascimento": str(user.data_nascimento),
         "verified": False,
         "verify_token": token
@@ -96,8 +96,17 @@ async def read_user(user_id: str):
 
 @app.put("/users/{user_id}", response_model=UserOut)
 async def update_user(user_id: str, user_update: UserUpdate):
-    update_data = {k: v for k, v in user_update.dict().items() if v is not None}
+    update_data = {
+        k: (v.isoformat() if isinstance(v, date) else v)
+        for k, v in user_update.dict().items()
+        if v is not None
+    }
 
+    try:
+        object_id = ObjectId(user_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID inválido")
+    
     result = await db["users"].update_one(
         {"_id": ObjectId(user_id)},
         {"$set": update_data}

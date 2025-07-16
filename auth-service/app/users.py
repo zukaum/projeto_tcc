@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from .schemas import UserIn, UserUpdate, UserRole
 from .auth import hash_password
-from app.db import db
+from .database import db
 from uuid import uuid4
 import re
 

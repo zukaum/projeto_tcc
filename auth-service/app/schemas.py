@@ -5,9 +5,9 @@ from enum import Enum
 
 
 class UserRole(str, Enum):
-    usuario_fisico = "usuário físico"
+    usuario_fisico = "usuario fisico"
     auditor = "auditor"
-    cartorio = "cartório"
+    cartorio = "cartorio"
 
 
 class UserIn(BaseModel):
@@ -25,7 +25,7 @@ class UserOut(BaseModel):
     id_documento: str
     email: EmailStr
     role: UserRole
-    data_nascimento: str  # opcionalmente `date`, mas geralmente convertemos para str ao sair
+    data_nascimento: date
 
 
 class UserUpdate(BaseModel):
