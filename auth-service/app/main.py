@@ -14,13 +14,13 @@ app = FastAPI()
 
 @app.post("/register")
 async def register(user: UserIn):
-    if await db.users.find_one({"email": user.email}):
+    if await db["users"].find_one({"email": user.email}):
         raise HTTPException(status_code=400, detail="Usuário já existe")
 
     hashed = hash_password(user.password)
     token = create_token({"email": user.email})
 
-    result = await db.users.insert_one({
+    result = await db["users"].insert_one({
         "nome_completo": user.nome_completo,
         "id_documento": user.id_documento,
         "email": user.email,
@@ -39,11 +39,11 @@ async def register(user: UserIn):
 @app.get("/verify/{token}")
 async def verify(token: str):
     data = decode_token(token)
-    user = await db.users.find_one({"email": data["email"]})
+    user = await db["users"].find_one({"email": data["email"]})
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
 
-    await db.users.update_one({"email": user["email"]}, {
+    await db["users"].update_one({"email": user["email"]}, {
         "$set": {"verified": True},
         "$unset": {"verify_token": ""}
     })
@@ -52,7 +52,7 @@ async def verify(token: str):
 
 @app.post("/login")
 async def login(email: str = Body(...), password: str = Body(...)):
-    user = await db.users.find_one({"email": email})
+    user = await db["users"].find_one({"email": email})
     if not user or not verify_password(password, user["password"]):
         raise HTTPException(status_code=401, detail="Credenciais inválidas")
     if not user["verified"]:
@@ -64,7 +64,7 @@ async def login(email: str = Body(...), password: str = Body(...)):
 
 @app.get("/users", response_model=List[UserOut])
 async def read_users(skip: int = 0, limit: int = 100):
-    cursor = db.users.find().skip(skip).limit(limit)
+    cursor = db["users"].find().skip(skip).limit(limit)
     users_list = []
     async for user in cursor:
         users_list.append(UserOut(
@@ -80,7 +80,7 @@ async def read_users(skip: int = 0, limit: int = 100):
 
 @app.get("/users/{user_id}", response_model=UserOut)
 async def read_user(user_id: str):
-    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    user = await db["users"].find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
 
@@ -98,7 +98,7 @@ async def read_user(user_id: str):
 async def update_user(user_id: str, user_update: UserUpdate):
     update_data = {k: v for k, v in user_update.dict().items() if v is not None}
 
-    result = await db.users.update_one(
+    result = await db["users"].update_one(
         {"_id": ObjectId(user_id)},
         {"$set": update_data}
     )
@@ -106,7 +106,7 @@ async def update_user(user_id: str, user_update: UserUpdate):
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
 
-    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    user = await db["users"].find_one({"_id": ObjectId(user_id)})
 
     return UserOut(
         id=str(user["_id"]),
@@ -120,7 +120,7 @@ async def update_user(user_id: str, user_update: UserUpdate):
 
 @app.delete("/users/{user_id}")
 async def delete_user(user_id: str):
-    result = await db.users.delete_one({"_id": ObjectId(user_id)})
+    result = await db["users"].delete_one({"_id": ObjectId(user_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     return {"message": "Usuário deletado"}
