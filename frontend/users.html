@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Usuários - eSRI</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h1>CRUD de Usuários</h1>
+    <form id="userForm">
+        <input type="text" id="nome" placeholder="Nome Completo" required>
+        <input type="email" id="email" placeholder="E-mail" required>
+        <input type="text" id="documento" placeholder="Documento" required>
+        <input type="date" id="nascimento" required>
+        <input type="password" id="senha" placeholder="Senha" required>
+        <button type="submit">Criar Usuário</button>
+    </form>
+
+    <h2>Lista de Usuários</h2>
+    <ul id="userList"></ul>
+</div>
+
+<script>
+async function carregarUsuarios() {
+    const res = await fetch('http://localhost:8001/users');
+    const users = await res.json();
+    const ul = document.getElementById('userList');
+    ul.innerHTML = '';
+    users.forEach(u => {
+        const li = document.createElement('li');
+        li.textContent = `${u.nome_completo} (${u.email})`;
+        ul.appendChild(li);
+    });
+}
+
+document.getElementById('userForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nome_completo = document.getElementById('nome').value;
+    const email = document.getElementById('email').value;
+    const id_documento = document.getElementById('documento').value;
+    const data_nascimento = document.getElementById('nascimento').value;
+    const password = document.getElementById('senha').value;
+
+    await fetch('http://localhost:8001/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome_completo, email, id_documento, data_nascimento, password })
+    });
+
+    carregarUsuarios();
+});
+
+carregarUsuarios();
+</script>
+</body>
+</html>
