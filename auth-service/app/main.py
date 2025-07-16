@@ -2,7 +2,7 @@ from fastapi import FastAPI, Body, HTTPException
 from typing import List
 from bson import ObjectId
 from datetime import date
-from . import db
+from .db import db
 from .schemas import UserIn, UserOut, UserUpdate
 from .config import BASE_URL
 from .auth import hash_password, verify_password, create_token, decode_token
