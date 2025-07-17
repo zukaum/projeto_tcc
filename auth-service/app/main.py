@@ -4,7 +4,7 @@ from typing import List
 from bson import ObjectId
 from datetime import date
 from .database import db
-from .schemas import UserIn, UserOut, UserUpdate
+from .schemas import UserIn, UserOut, UserUpdate, UserRole
 from .config import BASE_URL
 from .auth import hash_password, verify_password, create_token, decode_token
 from .email_utils import send_verification_email
@@ -141,3 +141,8 @@ async def delete_user(user_id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     return {"message": "Usuário deletado"}
+
+
+@app.get("/roles", response_model=List[UserRole])
+async def get_roles():
+    return list(UserRole)
