@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Body, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 from bson import ObjectId
 from datetime import date
@@ -11,6 +12,13 @@ from .email_utils import send_verification_email
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/register")
 async def register(user: UserIn):
