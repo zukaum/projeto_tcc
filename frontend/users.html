@@ -7,13 +7,16 @@
 </head>
 <body>
 <div class="container">
-    <h1>CRUD de Usuários</h1>
+    <h1>Cadastre-se</h1>
     <form id="userForm">
         <input type="text" id="nome" placeholder="Nome Completo" required>
         <input type="email" id="email" placeholder="E-mail" required>
         <input type="text" id="documento" placeholder="Documento" required>
         <input type="date" id="nascimento" required>
         <input type="password" id="senha" placeholder="Senha" required>
+        <select id="role" required>
+            <option value="">Selecione um papel</option>
+        </select>
         <button type="submit">Criar Usuário</button>
     </form>
 
@@ -22,8 +25,23 @@
 </div>
 
 <script>
+async function carregarRoles() {
+    const res = await fetch('http://localhost:8001/roles');
+    const roles = await res.json();
+    const select = document.getElementById('role');
+    
+    roles.forEach(role => {
+        const option = document.createElement('option');
+        option.value = role;
+        option.textContent = role
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        select.appendChild(option);
+    });
+}
 async function carregarUsuarios() {
-    const res = await fetch('http://localhost:8001/users');
+    const res = await fetch('http://localhost:8001/users?skip=0&limit=100');
     const users = await res.json();
     const ul = document.getElementById('userList');
     ul.innerHTML = '';
@@ -41,17 +59,27 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
     const id_documento = document.getElementById('documento').value;
     const data_nascimento = document.getElementById('nascimento').value;
     const password = document.getElementById('senha').value;
+    const role = document.getElementById('role').value;
 
-    await fetch('http://localhost:8001/users', {
+    const res = await fetch('http://localhost:8001/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nome_completo, email, id_documento, data_nascimento, password })
+        body: JSON.stringify({ nome_completo, email, id_documento, data_nascimento, password, role })
     });
+
+    if (res.ok) {
+        alert('Usuário criado com sucesso!');
+        document.getElementById('userForm').reset();
+    } else {
+        const error = await res.json();
+        alert(`Erro ao criar usuário: ${error.detail}`);
+    }
 
     carregarUsuarios();
 });
 
 carregarUsuarios();
+carregarRoles();
 </script>
 </body>
 </html>
