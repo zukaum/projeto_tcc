@@ -6,3 +6,5 @@ python-jose[cryptography]
 bcrypt
 python-dotenv
 passlib[bcrypt]
+asyncpg
+aiosmtplib
